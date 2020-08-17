@@ -81,7 +81,6 @@ var Snake = function() {
     new Block(6, 5),
     new Block(5, 5)
   ];
-
   this.direction = "right";
   this.nextDirection = "right";
 };
@@ -99,6 +98,7 @@ Snake.prototype.draw = function() {
     }
   }
 };
+var gameStats = true;
 Snake.prototype.move = function() {
   var head = this.segments[0];
   var newHead;
@@ -117,6 +117,7 @@ Snake.prototype.move = function() {
 
   if(this.checkCollision(newHead)) {
     gameOver();
+    gameStats = false;
     return;
   }
 
@@ -127,7 +128,7 @@ Snake.prototype.move = function() {
     if(animationTime > 0) {
       animationTime--;
     }
-    apple.move();
+    apple.move(this.segments);
   } else {
     this.segments.pop();
   }
@@ -185,10 +186,19 @@ Apple.prototype.draw = function() {
   this.position.drawCircle("LimeGreen");
 };
 
-Apple.prototype.move = function() {
+Apple.prototype.move = function(occupiedBlocks) {
   var randomCol = Math.floor(Math.random() * (widthInBlocks - 2)) + 1;
   var randomRow = Math.floor(Math.random() * (heightInBlocks - 2)) + 1;
   this.position = new Block(randomCol, randomRow);
+
+  var index = occupiedBlocks.length - 1;
+  while(index >= 0) {
+    if(this.position.equal(occupiedBlocks[index])){
+      this.move(occupiedBlocks);
+      return;
+    }
+    index--;
+  }
 }
 var apple = new Apple()
 var snake = new Snake();
@@ -202,9 +212,11 @@ var gameLoop = function() {
   snake.draw();
   apple.draw();
   drawBorder();
-  setTimeout(gameLoop, animationTime);
+  var stopTimeOut = setTimeout(gameLoop, animationTime);
+  if(!gameStats) {
+    clearTimeout(stopTimeOut);
+  }
 };
-
 gameLoop();
 // var intervalId = setInterval(function() {
 //   ctx.clearRect(0, 0, width, height);
